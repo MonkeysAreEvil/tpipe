@@ -1,0 +1,212 @@
+'\" t
+.\" ** The above line should force tbl to be a preprocessor **
+.\" Man page for tpipe
+.\"
+.\" Copyright (C), 2003 Juanjo Garcia.
+.\"
+.\" You may distribute under the terms of the GNU General Public
+.\" License as specified in the file COPYING that comes with the
+.\" tpipe distribution.
+.\"
+.\" Sat Nov 1 11:20:29 GMT 2003  Juanjo Garcia (juanjo@eurogaran.com)
+.\"
+.TH tpipe 1 "28 February 2004" "1.6" "Command plumbing"
+.SH NAME
+tpipe \- duplicate standard input and/or standard ouput
+.SH SYNOPSIS
+.\" The general command line
+.B tpipe
+.IR string
+.br
+.\" The common options
+.B tpipe
+.RB [\| \-h \||\| \-\-help \||\| \-\-usage \|]
+.RB [\| \-v \||\| \-\-version \|]
+.br
+.SH DESCRIPTION
+.B tpipe
+is the tool to connect different command pipelines.
+.br
+It works in a similar way to
+.BR tee (1)
+but the recipient is not a file: The
+.IR string
+argument given to
+.B tpipe
+must be an 'adequately quoted' command or pipeline of commands.
+.br
+Beware it will be executed in a subshell by
+.BR sh (1)
+regardless of the shell from which
+.B tpipe
+is invoked.
+.PP
+Unlike other implementations, this one adheres strictly to
+sound operative system standards in that there is no more than one
+possible standard output at any given time.
+.SH OPTIONS
+.TP
+\fB\-h\fR, \fB\-\-help\fR, \fB\-\-usage\fR
+display this help and exit
+.TP
+\fB\-v\fR, \fB\-\-version\fR
+output version information and exit
+.SH EXAMPLES
+.TP
+1- Duplicate standard output by redirecting it to a file through another pipe:
+
+$ command1 | tpipe 'pipeline > file' | command2
+
+  command1 --> tpipe -------> command2
+                |
+                 --> pipeline --> file
+
+.TP
+2- Reinject the other pipe output into standard output by simply NOT redirecting:
+
+$ pipeline1 | tpipe "pipeline2" | pipeline3
+
+  pipeline1 ------------------> pipeline3
+             |               ^
+             |               |
+              --> pipeline2 -
+
+.br
+Expect UNDETERMINED final results, but it is assumed this is what you want:
+
+.br
+Depending on which one is executed faster, pipeline3 will collect pipeline2's
+output before, after, or while receiving that of pipeline1.
+
+.br
+.B tpipe
+does its best to keep balance on both outputs, therefore maximizing
+in fact the a-priori chance of receiving them interspersed.
+.TP
+3- Inject into a pipeline data from an independent origin:
+
+$ cat wordlist1 | tpipe "cat dictionary2" >> passwords
+
+  cat wordlist1  -----------> passwords
+                      /
+  cat dictionary2 ---
+
+.br
+Same comment made for the previous example applies here, so you know
+all outputs will be collected in the end, only you don't know beforehand
+the order in which they will arrive.
+
+.br
+Again, it is presumed that you don't care or even that this is precisely
+what you want, or you would rather be using more traditional things like:
+
+.br
+$ cat wordlist1 >> passwords
+.br
+$ cat dictionary2 >> passwords
+.TP
+4- Multiple instances:
+
+$ ...| tpipe "echo world" | tpipe 'echo hello' |...
+
+      tpipe '...'--
+                   |
+                   v
+      tpipe '...'--
+                   |
+                   v
+  command1 -------> command2
+                   ^
+                   |
+      tpipe '...'--
+                   ^
+                   |
+      tpipe '...'--
+.TP
+5- Nesting:
+
+$ ...| tpipe "echo world | tpipe 'echo hello'" |...
+
+.br
+Note the subtle difference from the previous example.
+.TP
+6- No operation:
+
+$ ...| tpipe '' |...
+
+.br
+would be tantamount to  ...| cat |...
+
+.TP
+7- Environment variables as shell macros:
+
+$ PIPE1='cat > textfile'; PIPE2='sort | uniq'
+.br
+$ ... | tpipe $PIPE1 | eval $PIPE2 | ...
+
+.br
+would be equivalent to:
+.br
+$ ... | tpipe 'cat > textfile' | sort | uniq | ...
+
+.br
+which would -in turn- be equivalent to:
+.br
+$ ... | tee textfile | sort | uniq | ...
+.SH "EXIT STATUS"
+Nonzero in case the subpipe could not be opened.
+(Note this is different from unsuccesful execution of the subpipe).
+Standard output is always delivered by this implementation of
+.B tpipe
+regardless of what happens with the subpipe.
+.SH "BUGS"
+.B tpipe
+is considered unorthodox.
+.SH "REPORTING BUGS"
+Report bugs to <juanjo@eurogaran.com>.
+.\"Report bugs to <bug-sh-utils@gnu.org>.
+.SH COPYING
+Copyright \(co 2003 Juanjo Garcia <juanjo@eurogaran.com>
+.\"Copyright \(co 2003 Free Software Foundation, Inc.
+.PP
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+.PP
+Permission is granted to make and distribute verbatim copies of
+this manual provided the copyright notice and this permission notice
+are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions of this
+manual under the conditions for verbatim copying, provided that the
+entire resulting derived work is distributed under the terms of a
+permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that this permission notice may be included in
+translations approved by the Free Software Foundation instead of in
+the original English.
+.SH AUTHORS
+Written by Juanjo Garcia.
+.SH HISTORY
+1990 \- The first
+.B tpipe
+tool was originally conceived, written and put in the public domain
+by David B Rosen <rosen@bucasb.bu.edu> for the HP-UX 10.10 system.
+See:
+.br
+.IR <ftp://ftp.uu.net/usenet/comp.sources.unix/volume22/tpipe.Z> ,
+.br
+.IR <http://bak-px.online.sh.cn/mirrors/hpux.freeware/Users/tpipe-1.0/> .
+
+Nov 1 2003: Completely rewritten from scratch under the terms of the GNU
+General Public License by Juanjo Garcia <juanjo@eurogaran.com>
+
+.SH "SEE ALSO"
+.BR tee (1),
+.BR cat (1),
+.BR mkfifo (1),
+.BR sh (1)
+or
+.BR bash (1).
+

@@ -1,0 +1,48 @@
+
+1) System-wide installation:
+
+    1.1  Become root and explode tpipe-1.6.tar.gz:
+
+	# tar xfz -C /usr/local/src tpipe-1.6.tar.gz
+
+    1.2  Move to the tpipe source:
+
+	# cd /usr/local/src/tpipe-1.6
+
+    1.3  Review the Makefile before proceeding as usual:
+
+	# make install
+
+    If you have no make utility, compile and install by hand:
+
+		# cc -o tpipe tpipe.c
+
+		# cp tpipe /usr/local/bin
+		# cp tpipe.1 /usr/local/man/man1
+
+    ...and you are done.
+
+
+Good practice:
+
+    /usr/local/bin should always be in the PATH of every user.
+
+    Leave the source at /usr/local/src so you can make uninstall in the future.
+
+
+
+2) Installing for just yourself without root permission:
+
+    Compile and install as previously explained, substituting /usr/local
+    for your $HOME directory.
+
+
+Good practice:
+
+    Have a $HOME/src directory as well as a $HOME/bin in your $PATH
+    and a $HOME/man/man1 in your $MANPATH or /etc/manpath.config
+    so you can:
+
+	$ cp tpipe $HOME/bin
+	$ cp tpipe.1 $HOME/man/man1
+
